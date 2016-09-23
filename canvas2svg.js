@@ -1042,6 +1042,34 @@
     };
 
     /**
+     * Determine if a canvas object is tainted.
+     */
+    ctx.prototype.__isTainted = function(ctx) {
+        try {
+            ctx.getImageData(0, 0, 1, 1);
+            return false;
+        } catch(err) {
+            return (err.code === 18);
+        }
+    };
+
+    /**
+     * Gets an image uri or if it's canvas object, attempt to convert it to a data url.
+     */
+    ctx.prototype.__toUri = function(image) {
+        var uri = "";
+        if (image.nodeName === "CANVAS") {
+            if (!this.__isTainted(image)) {
+                uri = image.toDataURL();
+            }
+        } else {
+            uri = image.getAttribute("src");
+        }
+
+        return uri;
+    };
+
+    /**
      * Draws a canvas, image or mock context to this canvas.
      * Note that all svg dom manipulation uses node.childNodes rather than node.children for IE support.
      * http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#dom-context-2d-drawimage
@@ -1125,8 +1153,7 @@
                 image = canvas;
             }
             svgImage.setAttribute("transform", translateDirective);
-            svgImage.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href",
-                image.nodeName === "CANVAS" ? image.toDataURL() : image.getAttribute("src"));
+            svgImage.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", this.__toUri(image));
             parent.appendChild(svgImage);
         }
     };
@@ -1144,8 +1171,7 @@
             img = this.__document.createElementNS("http://www.w3.org/2000/svg", "image");
             img.setAttribute("width", image.width);
             img.setAttribute("height", image.height);
-            img.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href",
-                image.nodeName === "CANVAS" ? image.toDataURL() : image.getAttribute("src"));
+            img.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", this.__toUri(image));
             pattern.appendChild(img);
             this.__defs.appendChild(pattern);
         } else if(image instanceof ctx) {
