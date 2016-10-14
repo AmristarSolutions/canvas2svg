@@ -144,7 +144,7 @@
             svgAttr : "opacity",
             canvas : 1,
             svg : 1,
-            apply :  "fill stroke"
+            apply :  "fill stroke image"
         },
         "font":{
             //font converts to multiple svg attributes, there is custom logic for this
@@ -379,6 +379,10 @@
                         var attr = style.svgAttr;
                         if (keys[i] === 'globalAlpha') {
                             attr = type+'-'+style.svgAttr;
+							if (type === 'image') {
+								attr = style.svgAttr
+							}
+							
                             if (this.__currentElement.getAttribute(attr)) {
                                  //fill-opacity or stroke-opacity has already been set by stroke or fill.
                                 continue;
@@ -1142,6 +1146,7 @@
             svgImage.setAttribute("width", dw);
             svgImage.setAttribute("height", dh);
             svgImage.setAttribute("preserveAspectRatio", "none");
+			this.__applyStyleToCurrentElement("image");
 
             if(sx || sy || sw !== image.width || sh !== image.height) {
                 //crop the image using a temporary canvas
