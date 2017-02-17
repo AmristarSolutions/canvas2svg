@@ -351,11 +351,15 @@
                     //pattern
                     if(value.__ctx) {
                         //copy over defs
-                        while(value.__ctx.__defs.childNodes.length) {
-                            id = value.__ctx.__defs.childNodes[0].getAttribute("id");
+                        for (var j = 0; j < value.__ctx.__defs.childNodes.length; j++) {
+                            id = value.__ctx.__defs.childNodes[j].getAttribute("id");
                             this.__ids[id] = id;
-                            this.__defs.appendChild(value.__ctx.__defs.childNodes[0]);
+                            this.__defs.appendChild(value.__ctx.__defs.childNodes[j]);
                         }
+
+                        // while(value.__ctx.__defs.childNodes.length) {
+												//
+                        // }
                     }
                     this.__currentElement.setAttribute("fill", format("url(#{id})", {id:value.__root.getAttribute("id")}));
                 }
@@ -1172,10 +1176,14 @@
         pattern.setAttribute("id", id);
         pattern.setAttribute("width", image.width);
         pattern.setAttribute("height", image.height);
+		pattern.setAttribute("patternUnits", "userSpaceOnUse");
+		
         if(image.nodeName === "CANVAS" || image.nodeName === "IMG") {
             img = this.__document.createElementNS("http://www.w3.org/2000/svg", "image");
             img.setAttribute("width", image.width);
             img.setAttribute("height", image.height);
+			img.setAttribute("height", image.height);
+
             img.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", this.__toUri(image));
             pattern.appendChild(img);
             this.__defs.appendChild(pattern);
