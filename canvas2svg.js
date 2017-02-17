@@ -16,6 +16,9 @@
 
     var STYLES, ctx, CanvasGradient, CanvasPattern, namedEntities;
 
+	var tempCanvas = document.createElement("CANVAS");
+	var tempContext = tempCanvas.getContext('2d');
+	
     //helper function to format a string
     function format(str, args) {
         var keys = Object.keys(args), i;
@@ -346,6 +349,10 @@
             style = STYLES[keys[i]];
             value = this[keys[i]];
             if(style.apply) {
+				if (value && value._pattern) {
+                    value = value._pattern;
+                }
+				
                 //is this a gradient or pattern?
                 if(style.apply.indexOf("fill")!==-1 && value instanceof CanvasPattern) {
                     //pattern
@@ -356,10 +363,6 @@
                             this.__ids[id] = id;
                             this.__defs.appendChild(value.__ctx.__defs.childNodes[j]);
                         }
-
-                        // while(value.__ctx.__defs.childNodes.length) {
-												//
-                        // }
                     }
                     this.__currentElement.setAttribute("fill", format("url(#{id})", {id:value.__root.getAttribute("id")}));
                 }
@@ -1176,14 +1179,13 @@
         pattern.setAttribute("id", id);
         pattern.setAttribute("width", image.width);
         pattern.setAttribute("height", image.height);
-		pattern.setAttribute("patternUnits", "userSpaceOnUse");
+        pattern.setAttribute("patternUnits", "userSpaceOnUse");
 		
         if(image.nodeName === "CANVAS" || image.nodeName === "IMG") {
             img = this.__document.createElementNS("http://www.w3.org/2000/svg", "image");
             img.setAttribute("width", image.width);
             img.setAttribute("height", image.height);
-			img.setAttribute("height", image.height);
-
+            img.setAttribute("height", image.height);
             img.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", this.__toUri(image));
             pattern.appendChild(img);
             this.__defs.appendChild(pattern);
@@ -1191,7 +1193,11 @@
             pattern.appendChild(image.__root.childNodes[1]);
             this.__defs.appendChild(pattern);
         }
-        return new CanvasPattern(pattern, this);
+
+        var hack = tempContext.createPattern(tempCanvas, 'no-repeat');
+        hack._pattern = new CanvasPattern(pattern, this);
+
+        return hack;
     };
 
     ctx.prototype.setLineDash = function(dashArray) {
