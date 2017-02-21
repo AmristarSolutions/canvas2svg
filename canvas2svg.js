@@ -16,18 +16,6 @@
 
     var STYLES, ctx, CanvasGradient, CanvasPattern, namedEntities;
 
-	var tempCanvas = document.createElement("CANVAS");
-	var tempContext = tempCanvas.getContext('2d');
-	
-    //helper function to format a string
-    function format(str, args) {
-        var keys = Object.keys(args), i;
-        for (i=0; i<keys.length; i++) {
-            str = str.replace(new RegExp("\\{" + keys[i] + "\\}", "gi"), args[keys[i]]);
-        }
-        return str;
-    }
-
     //helper function that generates a random string
     function randomString(holder) {
         var chars, randomstring, i;
@@ -199,7 +187,7 @@
             //separate alpha value, since webkit can't handle it
             regex = /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d?\.?\d*)\s*\)/gi;
             matches = regex.exec(color);
-            stop.setAttribute("stop-color", format("rgb({r},{g},{b})", {r:matches[1], g:matches[2], b:matches[3]}));
+            stop.setAttribute("stop-color", "rgb(" + matches[1] + "," +  matches[2] + ", "+ matches[3] +")");
             stop.setAttribute("stop-opacity", matches[4]);
         } else {
             stop.setAttribute("stop-color", color);
@@ -349,10 +337,6 @@
             style = STYLES[keys[i]];
             value = this[keys[i]];
             if(style.apply) {
-				if (value && value._pattern) {
-                    value = value._pattern;
-                }
-				
                 //is this a gradient or pattern?
                 if(style.apply.indexOf("fill")!==-1 && value instanceof CanvasPattern) {
                     //pattern
@@ -364,17 +348,17 @@
                             this.__defs.appendChild(value.__ctx.__defs.childNodes[j]);
                         }
                     }
-                    this.__currentElement.setAttribute("fill", format("url(#{id})", {id:value.__root.getAttribute("id")}));
+                    this.__currentElement.setAttribute("fill", "url(#" + value.__root.getAttribute("id") + ")");
                 }
                 else if(style.apply.indexOf("fill")!==-1 && value instanceof CanvasGradient) {
                     //gradient
-                    this.__currentElement.setAttribute("fill", format("url(#{id})", {id:value.__root.getAttribute("id")}));
+                    this.__currentElement.setAttribute("fill", "url(#"+ value.__root.getAttribute("id") +")");
                 } else if(style.apply.indexOf(type)!==-1 && style.svg !== value) {
                     if((style.svgAttr === "stroke" || style.svgAttr === "fill") && value.indexOf("rgba") !== -1) {
                         //separate alpha value, since illustrator can't handle it
                         regex = /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d?\.?\d*)\s*\)/gi;
                         matches = regex.exec(value);
-                        this.__currentElement.setAttribute(style.svgAttr, format("rgb({r},{g},{b})", {r:matches[1], g:matches[2], b:matches[3]}));
+                        this.__currentElement.setAttribute(style.svgAttr, "rgb(" + matches[1] + "," + matches[2] + ","+ matches[3] +")");
                         //should take globalAlpha here
                         var opacity = matches[4];
                         var globalAlpha = this.globalAlpha;
@@ -508,7 +492,7 @@
         if(y === undefined) {
             y = x;
         }
-        this.__addTransform(format("scale({x},{y})", {x:x, y:y}));
+        this.__addTransform("scale("+ x +","+ y +")");
     };
 
     /**
@@ -516,21 +500,21 @@
      */
     ctx.prototype.rotate = function(angle){
         var degrees = (angle * 180 / Math.PI);
-        this.__addTransform(format("rotate({angle},{cx},{cy})", {angle:degrees, cx:0, cy:0}));
+        this.__addTransform("rotate("+ degrees +",0,0)");
     };
 
     /**
      * translates the current element
      */
     ctx.prototype.translate = function(x, y){
-        this.__addTransform(format("translate({x},{y})", {x:x,y:y}));
+        this.__addTransform("translate("+ x +","+ y +")");
     };
 
     /**
      * applies a transform to the current element
      */
     ctx.prototype.transform = function(a, b, c, d, e, f){
-        this.__addTransform(format("matrix({a},{b},{c},{d},{e},{f})", {a:a, b:b, c:c, d:d, e:e, f:f}));
+        this.__addTransform("matrix("+ a +","+ b +","+ c +","+ d +","+ e +","+ f +")");
     };
 
     /**
@@ -583,7 +567,7 @@
 
         // creates a new subpath with the given point
         this.__currentPosition = {x: x, y: y};
-        this.__addPathCommand(format("M {x} {y}", {x:x, y:y}));
+        this.__addPathCommand("M "+ x +" "+ y);
     };
 
     /**
@@ -599,9 +583,9 @@
     ctx.prototype.lineTo = function(x, y){
         this.__currentPosition = {x: x, y: y};
         if (this.__currentDefaultPath.indexOf('M') > -1) {
-            this.__addPathCommand(format("L {x} {y}", {x:x, y:y}));
+            this.__addPathCommand("L "+ x +" " + y);
         } else {
-            this.__addPathCommand(format("M {x} {y}", {x:x, y:y}));
+            this.__addPathCommand("M "+ x +" " + y);
         }
     };
 
@@ -610,8 +594,7 @@
      */
     ctx.prototype.bezierCurveTo = function(cp1x, cp1y, cp2x, cp2y, x, y) {
         this.__currentPosition = {x: x, y: y};
-        this.__addPathCommand(format("C {cp1x} {cp1y} {cp2x} {cp2y} {x} {y}",
-            {cp1x:cp1x, cp1y:cp1y, cp2x:cp2x, cp2y:cp2y, x:x, y:y}));
+        this.__addPathCommand("C "+ cp1x +" " + cp1y + " " + cp2x + " " + cp2y +" "+ x +" " + y);
     };
 
     /**
@@ -619,7 +602,7 @@
      */
     ctx.prototype.quadraticCurveTo = function(cpx, cpy, x, y){
         this.__currentPosition = {x: x, y: y};
-        this.__addPathCommand(format("Q {cpx} {cpy} {x} {y}", {cpx:cpx, cpy:cpy, x:x, y:y}));
+        this.__addPathCommand("Q " + cpx + " " + cpy + " " + x + " " + y);
     };
 
 
@@ -1019,8 +1002,7 @@
         }
 
         this.lineTo(startX, startY);
-        this.__addPathCommand(format("A {rx} {ry} {xAxisRotation} {largeArcFlag} {sweepFlag} {endX} {endY}",
-            {rx:radius, ry:radius, xAxisRotation:0, largeArcFlag:largeArcFlag, sweepFlag:sweepFlag, endX:endX, endY:endY}));
+        this.__addPathCommand("A "+ radius +" "+ radius +" 0 " + largeArcFlag + " " + sweepFlag +" "+ endX + " " + endY);
 
         this.__currentPosition = {x: endX, y: endY};
     };
@@ -1042,7 +1024,7 @@
         this.__defs.appendChild(clipPath);
 
         //set the clip path to this group
-        group.setAttribute("clip-path", format("url(#{id})", {id:id}));
+        group.setAttribute("clip-path", "url(#"+ id +")");
 
         //clip paths can be scaled and transformed, we need to add another wrapper group to avoid later transformations
         // to this path
@@ -1193,11 +1175,7 @@
             pattern.appendChild(image.__root.childNodes[1]);
             this.__defs.appendChild(pattern);
         }
-
-        var hack = tempContext.createPattern(tempCanvas, 'no-repeat');
-        hack._pattern = new CanvasPattern(pattern, this);
-
-        return hack;
+        return new CanvasPattern(pattern, this);
     };
 
     ctx.prototype.setLineDash = function(dashArray) {
