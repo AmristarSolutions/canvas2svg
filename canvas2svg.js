@@ -327,7 +327,7 @@
     };
 
     /**
-     * Apples the current styles to the current SVG element. On "ctx.fill" or "ctx.stroke"
+     * Applies the current styles to the current SVG element. On "ctx.fill" or "ctx.stroke"
      * @param type
      * @private
      */
@@ -338,7 +338,7 @@
             value = this[keys[i]];
             if(style.apply) {
                 //is this a gradient or pattern?
-                if(style.apply.indexOf("fill")!==-1 && value instanceof CanvasPattern) {
+                if(style.apply.indexOf("fill")!==-1 && value instanceof CanvasPattern && type !== "stroke") {
                     //pattern
                     if(value.__ctx) {
                         //copy over defs
