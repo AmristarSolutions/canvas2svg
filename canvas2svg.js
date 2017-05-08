@@ -15,22 +15,12 @@
     "use strict";
 
     var STYLES, ctx, CanvasGradient, CanvasPattern, namedEntities;
-
+	var uniqueId = 0
+	
     //helper function that generates a random string
-    function randomString(holder) {
-        var chars, randomstring, i;
-        if (!holder) {
-            throw new Error("cannot create a random attribute name for an undefined object");
-        }
-        chars = "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
-        randomstring = "";
-        do {
-            randomstring = "";
-            for (i = 0; i < 12; i++) {
-                randomstring += chars[Math.floor(Math.random() * chars.length)];
-            }
-        } while (holder[randomstring]);
-        return randomstring;
+    function randomString() {
+		++uniqueId;
+        return "c2s_" + uniqueId;
     }
 
     //helper function to map named to numbered entities
@@ -268,21 +258,20 @@
      * @private
      */
     ctx.prototype.__createElement = function (elementName, properties, resetFill) {
-        if (typeof properties === "undefined") {
-            properties = {};
-        }
 
-        var element = this.__document.createElementNS("http://www.w3.org/2000/svg", elementName),
-            keys = Object.keys(properties), i, key;
+        var element = this.__document.createElementNS("http://www.w3.org/2000/svg", elementName), i, key;
         if(resetFill) {
             //if fill or stroke is not specified, the svg element should not display. By default SVG's fill is black.
             element.setAttribute("fill", "none");
             element.setAttribute("stroke", "none");
         }
-        for(i=0; i<keys.length; i++) {
-            key = keys[i];
-            element.setAttribute(key, properties[key]);
-        }
+		
+		if (properties) {
+			for (var key in properties) {
+				element.setAttribute(key, properties[key]);
+			}
+		}
+
         return element;
     };
 
@@ -292,11 +281,9 @@
      */
     ctx.prototype.__setDefaultStyles = function() {
         //default 2d canvas context properties see:http://www.w3.org/TR/2dcontext/
-        var keys = Object.keys(STYLES), i, key;
-        for(i=0; i<keys.length; i++) {
-            key = keys[i];
-            this[key] = STYLES[key].canvas;
-        }
+		for (var key in STYLES) {
+			this[key] = STYLES[key].canvas;
+		}
     };
 
     /**
@@ -305,11 +292,9 @@
      * @private
      */
     ctx.prototype.__applyStyleState = function(styleState) {
-        var keys = Object.keys(styleState), i, key;
-        for(i=0; i<keys.length; i++) {
-            key = keys[i];
-            this[key] = styleState[key];
-        }
+		for (var key in styleState) {
+			this[key] = styleState[key];
+		}
     };
 
     /**
@@ -318,11 +303,12 @@
      * @private
      */
     ctx.prototype.__getStyleState = function() {
-        var i, styleState = {}, keys = Object.keys(STYLES), key;
-        for(i=0; i<keys.length; i++) {
-            key = keys[i];
-            styleState[key] = this[key];
-        }
+        var styleState = {};
+
+		for (var key in STYLES) {
+			styleState[key] = this[key];
+		}
+		
         return styleState;
     };
 
@@ -332,14 +318,15 @@
      * @private
      */
     ctx.prototype.__applyStyleToCurrentElement = function(type) {
-        var keys = Object.keys(STYLES), i, style, value, id, regex, matches;
-        for(i=0; i<keys.length; i++) {
-            style = STYLES[keys[i]];
-            value = this[keys[i]];
+        var style, value, id, regex, matches;
+        for (var key in STYLES) {
+            style = STYLES[key];
+            value = this[key];
             if(style.apply) {
                 //is this a gradient or pattern?
                 if(style.apply.indexOf("fill")!==-1 && value instanceof CanvasPattern && type !== "stroke") {
                     //pattern
+					/*
                     if(value.__ctx) {
                         //copy over defs
                         for (var j = 0; j < value.__ctx.__defs.childNodes.length; j++) {
@@ -348,6 +335,7 @@
                             this.__defs.appendChild(value.__ctx.__defs.childNodes[j]);
                         }
                     }
+					*/
                     this.__currentElement.setAttribute("fill", "url(#" + value.__root.getAttribute("id") + ")");
                 }
                 else if(style.apply.indexOf("fill")!==-1 && value instanceof CanvasGradient) {
@@ -368,11 +356,11 @@
                         this.__currentElement.setAttribute(style.svgAttr+"-opacity", opacity);
                     } else {
                         var attr = style.svgAttr;
-                        if (keys[i] === 'globalAlpha') {
+                        if (key === 'globalAlpha') {
                             attr = type+'-'+style.svgAttr;
-							if (type === 'image') {
-								attr = style.svgAttr
-							}
+                            if (type === 'image') {
+                                attr = style.svgAttr
+                            }
 							
                             if (this.__currentElement.getAttribute(attr)) {
                                  //fill-opacity or stroke-opacity has already been set by stroke or fill.
@@ -381,8 +369,6 @@
                         }
                         //otherwise only update attribute if right type, and not svg default
                         this.__currentElement.setAttribute(attr, value);
-
-
                     }
                 }
             }
@@ -410,14 +396,11 @@
      * @return serialized svg
      */
     ctx.prototype.getSerializedSvg = function(fixNamedEntities) {
-        var serialized = new XMLSerializer().serializeToString(this.__root),
-            keys, i, key, value, regexp, xmlns;
+        var serialized = new XMLSerializer().serializeToString(this.__root), value, regexp, xmlns;
 
         if(fixNamedEntities) {
-            keys = Object.keys(namedEntities);
             //loop over each named entity and replace with the proper equivalent.
-            for(i=0; i<keys.length; i++) {
-                key = keys[i];
+            for (var key in namedEntities) {
                 value = namedEntities[key];
                 regexp = new RegExp(key, "gi");
                 if(regexp.test(serialized)) {
@@ -833,7 +816,7 @@
      */
     ctx.prototype.createLinearGradient = function(x1, y1, x2, y2){
         var grad = this.__createElement("linearGradient", {
-            id : randomString(this.__ids),
+            id : randomString(),
             x1 : x1+"px",
             x2 : x2+"px",
             y1 : y1+"px",
@@ -850,7 +833,7 @@
      */
     ctx.prototype.createRadialGradient = function(x0, y0, r0, x1, y1, r1){
         var grad = this.__createElement("radialGradient", {
-            id : randomString(this.__ids),
+            id : randomString(),
             cx : x1+"px",
             cy : y1+"px",
             r  : r1+"px",
@@ -1013,7 +996,7 @@
     ctx.prototype.clip = function(){
         var group = this.__closestGroupOrSvg(),
             clipPath = this.__createElement("clipPath"),
-            id =  randomString(this.__ids),
+            id =  randomString(),
             newGroup = this.__createElement("g");
 
         this.__applyCurrentDefaultPath();
@@ -1035,26 +1018,14 @@
     };
 
     /**
-     * Determine if a canvas object is tainted.
-     */
-    ctx.prototype.__isTainted = function(ctx) {
-        try {
-            ctx.getImageData(0, 0, 1, 1);
-            return false;
-        } catch(err) {
-            return (err.code === 18);
-        }
-    };
-
-    /**
      * Gets an image uri or if it's canvas object, attempt to convert it to a data url.
      */
     ctx.prototype.__toUri = function(image) {
         var uri = "";
         if (image.nodeName === "CANVAS") {
-            if (!this.__isTainted(image)) {
+            try {
                 uri = image.toDataURL();
-            }
+            } catch(e) {}
         } else {
             uri = image.getAttribute("src");
         }
@@ -1156,7 +1127,7 @@
      * Generates a pattern tag
      */
     ctx.prototype.createPattern = function(image, repetition){
-        var pattern = this.__document.createElementNS("http://www.w3.org/2000/svg", "pattern"), id = randomString(this.__ids),
+        var pattern = this.__document.createElementNS("http://www.w3.org/2000/svg", "pattern"), id = randomString(),
             img;
         pattern.setAttribute("id", id);
         pattern.setAttribute("width", image.width);
