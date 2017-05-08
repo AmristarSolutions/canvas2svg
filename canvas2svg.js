@@ -15,11 +15,11 @@
     "use strict";
 
     var STYLES, ctx, CanvasGradient, CanvasPattern, namedEntities;
-	var uniqueId = 0
-	
+    var uniqueId = 0
+    
     //helper function that generates a random string
     function randomString() {
-		++uniqueId;
+        ++uniqueId;
         return "c2s_" + uniqueId;
     }
 
@@ -265,12 +265,12 @@
             element.setAttribute("fill", "none");
             element.setAttribute("stroke", "none");
         }
-		
-		if (properties) {
-			for (var key in properties) {
-				element.setAttribute(key, properties[key]);
-			}
-		}
+        
+        if (properties) {
+            for (var key in properties) {
+                element.setAttribute(key, properties[key]);
+            }
+        }
 
         return element;
     };
@@ -281,9 +281,9 @@
      */
     ctx.prototype.__setDefaultStyles = function() {
         //default 2d canvas context properties see:http://www.w3.org/TR/2dcontext/
-		for (var key in STYLES) {
-			this[key] = STYLES[key].canvas;
-		}
+        for (var key in STYLES) {
+            this[key] = STYLES[key].canvas;
+        }
     };
 
     /**
@@ -292,9 +292,9 @@
      * @private
      */
     ctx.prototype.__applyStyleState = function(styleState) {
-		for (var key in styleState) {
-			this[key] = styleState[key];
-		}
+        for (var key in styleState) {
+            this[key] = styleState[key];
+        }
     };
 
     /**
@@ -305,10 +305,10 @@
     ctx.prototype.__getStyleState = function() {
         var styleState = {};
 
-		for (var key in STYLES) {
-			styleState[key] = this[key];
-		}
-		
+        for (var key in STYLES) {
+            styleState[key] = this[key];
+        }
+        
         return styleState;
     };
 
@@ -325,17 +325,6 @@
             if(style.apply) {
                 //is this a gradient or pattern?
                 if(style.apply.indexOf("fill")!==-1 && value instanceof CanvasPattern && type !== "stroke") {
-                    //pattern
-					/*
-                    if(value.__ctx) {
-                        //copy over defs
-                        for (var j = 0; j < value.__ctx.__defs.childNodes.length; j++) {
-                            id = value.__ctx.__defs.childNodes[j].getAttribute("id");
-                            this.__ids[id] = id;
-                            this.__defs.appendChild(value.__ctx.__defs.childNodes[j]);
-                        }
-                    }
-					*/
                     this.__currentElement.setAttribute("fill", "url(#" + value.__root.getAttribute("id") + ")");
                 }
                 else if(style.apply.indexOf("fill")!==-1 && value instanceof CanvasGradient) {
@@ -361,7 +350,7 @@
                             if (type === 'image') {
                                 attr = style.svgAttr
                             }
-							
+
                             if (this.__currentElement.getAttribute(attr)) {
                                  //fill-opacity or stroke-opacity has already been set by stroke or fill.
                                 continue;
@@ -1106,7 +1095,7 @@
             svgImage.setAttribute("width", dw);
             svgImage.setAttribute("height", dh);
             svgImage.setAttribute("preserveAspectRatio", "none");
-			this.__applyStyleToCurrentElement("image");
+            this.__applyStyleToCurrentElement("image");
 
             if(sx || sy || sw !== image.width || sh !== image.height) {
                 //crop the image using a temporary canvas
@@ -1133,7 +1122,7 @@
         pattern.setAttribute("width", image.width);
         pattern.setAttribute("height", image.height);
         pattern.setAttribute("patternUnits", "userSpaceOnUse");
-		
+
         if(image.nodeName === "CANVAS" || image.nodeName === "IMG") {
             img = this.__document.createElementNS("http://www.w3.org/2000/svg", "image");
             img.setAttribute("width", image.width);
