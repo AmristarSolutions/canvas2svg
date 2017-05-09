@@ -243,6 +243,9 @@
         //make sure we don't generate the same ids in defs
         this.__ids = {};
 
+        //pattern image cache.
+        this.__patternCache = {};
+
         //defs tag
         this.__defs = this.__document.createElementNS("http://www.w3.org/2000/svg", "defs");
         this.__root.appendChild(this.__defs);
@@ -265,7 +268,7 @@
             element.setAttribute("fill", "none");
             element.setAttribute("stroke", "none");
         }
-        
+		
         if (properties) {
             for (var key in properties) {
                 element.setAttribute(key, properties[key]);
@@ -308,7 +311,7 @@
         for (var key in STYLES) {
             styleState[key] = this[key];
         }
-        
+
         return styleState;
     };
 
@@ -350,7 +353,7 @@
                             if (type === 'image') {
                                 attr = style.svgAttr
                             }
-
+							
                             if (this.__currentElement.getAttribute(attr)) {
                                  //fill-opacity or stroke-opacity has already been set by stroke or fill.
                                 continue;
@@ -1116,26 +1119,48 @@
      * Generates a pattern tag
      */
     ctx.prototype.createPattern = function(image, repetition){
-        var pattern = this.__document.createElementNS("http://www.w3.org/2000/svg", "pattern"), id = randomString(),
-            img;
-        pattern.setAttribute("id", id);
-        pattern.setAttribute("width", image.width);
-        pattern.setAttribute("height", image.height);
-        pattern.setAttribute("patternUnits", "userSpaceOnUse");
-
+        var child;
+        var canvasPattern;
+		
         if(image.nodeName === "CANVAS" || image.nodeName === "IMG") {
-            img = this.__document.createElementNS("http://www.w3.org/2000/svg", "image");
-            img.setAttribute("width", image.width);
-            img.setAttribute("height", image.height);
-            img.setAttribute("height", image.height);
-            img.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", this.__toUri(image));
-            pattern.appendChild(img);
-            this.__defs.appendChild(pattern);
+            if (image.src) {
+                canvasPattern = this.__patternCache[image.src];
+            }
+
+            if (!canvasPattern) {
+                var img = this.__document.createElementNS("http://www.w3.org/2000/svg", "image");
+                img.setAttribute("width", image.width);
+                img.setAttribute("height", image.height);
+                img.setAttribute("height", image.height);
+                img.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", this.__toUri(image));
+
+                child = img;
+            }
         } else if(image instanceof ctx) {
             pattern.appendChild(image.__root.childNodes[1]);
-            this.__defs.appendChild(pattern);
+            child = image.__root.childNodes[1];
         }
-        return new CanvasPattern(pattern, this);
+
+        if (child && !canvasPattern) {
+            var pattern = this.__document.createElementNS("http://www.w3.org/2000/svg", "pattern");
+
+            var id = randomString();
+
+            pattern.setAttribute("id", id);
+            pattern.setAttribute("width", image.width);
+            pattern.setAttribute("height", image.height);
+            pattern.setAttribute("patternUnits", "userSpaceOnUse");
+            pattern.appendChild(child);
+            this.__defs.appendChild(pattern);
+
+            canvasPattern = new CanvasPattern(pattern, this);
+
+            if (image.src) {
+                this.__patternCache[image.src] = canvasPattern;
+            }
+        }
+
+        return canvasPattern;
     };
 
     ctx.prototype.setLineDash = function(dashArray) {
