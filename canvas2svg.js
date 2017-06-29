@@ -1019,7 +1019,16 @@
                 uri = image.toDataURL();
             } catch(e) {}
         } else {
-            uri = image.getAttribute("src");
+			try {
+				var canvas = document.createElement('CANVAS');
+				var ctx = canvas.getContext('2d');
+				canvas.height = image.height;
+				canvas.width = image.width;
+				ctx.drawImage(image, 0, 0);
+				uri = canvas.toDataURL('image/png');
+			} catch(e) {
+				uri = image.getAttribute("src");
+			}
         }
 
         return uri;
